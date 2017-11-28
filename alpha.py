@@ -9,7 +9,7 @@ original_wav = "furelise.wav"
 songs_wav = ["furelise1.wav", "furelise2.wav", "furelise3.wav", "furelise4.wav", 
              "moonlight1.wav", "moonlight2.wav", "moonlight3.wav", "moonlight4.wav", 
              "metal1.wav", "metal2.wav", "metal3.wav", "metal4.wav", 
-            "skrillex.wav"]
+            "skrillex.wav", "prelude1.wav", "prelude2.wav", "prelude3.wav"]
 
 
 original, sample_rate = librosa.load("songs/" + original_wav)
