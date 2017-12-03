@@ -1,19 +1,13 @@
 import librosa
 import numpy as np
 import scipy
+import pickle
+import os
+import math
 
+ranges = [40, 80, 120, 180, 300]
+fft_frame_size = 2000
 
-#replace with the name of the input file
-original_wav = "furelise.wav"
-#update with more songs
-songs_wav = ["furelise1.wav", "furelise2.wav", "furelise3.wav", "furelise4.wav", 
-             "moonlight1.wav", "moonlight2.wav", "moonlight3.wav", "moonlight4.wav", 
-             "metal1.wav", "metal2.wav", "metal3.wav", "metal4.wav", 
-            "skrillex.wav", "prelude1.wav", "prelude2.wav", "prelude3.wav"]
-
-
-original, sample_rate = librosa.load("songs/" + original_wav)
-song_data = [original] + [librosa.load("songs/" + song)[0] for song in songs_wav]
 
 def remove_zeros(vec):
     temp = np.transpose(vec == 0)
@@ -23,16 +17,6 @@ def remove_zeros(vec):
 def get_fft_chunks(time_data):
     num_samples= len(time_data)//fft_frame_size
     return [np.fft.fft(time_data[i*fft_frame_size:(i+1)*fft_frame_size]) for i in range(num_samples)]
-
-songs = [remove_zeros(s) for s in song_data] #remove the non-information
-
-#parameter we can play with
-fft_frame_size = 2000
-freq = np.fft.fftfreq(fft_frame_size)
-fft_freqs = [abs(freq[i]*sample_rate) for i in range(fft_frame_size)] #frequencies at indices of the dft
-
-ranges = [40, 80, 120, 180, 300]
-
 
 def get_magnitudes(fft):
     #return high_mags, a 2d array
@@ -74,16 +58,20 @@ def populate_database(mags, database, song_name):
             database[key][song_name] = []
         database[key][song_name].append(i)
 
-database = {}
-#songs[0] is the original/input, we want to process it separately
-for index, song in enumerate(songs[1:]):
-    #print("adding song ", songs_wav[index][:-4], "...")
-    
-    original_fft = get_fft_chunks(song)
-    mags = get_magnitudes(original_fft)
-    populate_database(mags, database, songs_wav[index][:-4])
+#replace with the name of the input file
+original_wav = "furelise.wav"
+songs_wav = [song for song in os.listdir("songs") if song[-3:] == "wav"]
+
+with open('song_data.pickle', 'rb') as handle:
+    database = pickle.load(handle)
+original, sample_rate = librosa.load("songs/" + original_wav)
+# song_data = [original] + [librosa.load("songs/" + song)[0] for song in songs_wav]
+
+freq = np.fft.fftfreq(fft_frame_size)
+fft_freqs = [abs(freq[i]*sample_rate) for i in range(fft_frame_size)] #frequencies at indices of the dft
 
 #process original/input song 
+original = remove_zeros(original)
 original_fingerprint = {}
 original_fft = get_fft_chunks(original)
 mags = get_magnitudes(original_fft)
@@ -96,7 +84,7 @@ for key in original_fingerprint.keys():
     if key in database:
         for song_name in database[key]:
             similarities[song_name] += len(database[key][song_name]) * len(original_fingerprint[key])
-
+print(similarities)
 def knn(k, sim_dict):
     sorted_dict = sorted(sim_dict, key=sim_dict.get, reverse=True)[:k]
     counts = {}
@@ -107,3 +95,5 @@ def knn(k, sim_dict):
         counts[name] += 1
     return max(counts, key=counts.get)
 
+out = knn(3, similarities)
+print(out)
