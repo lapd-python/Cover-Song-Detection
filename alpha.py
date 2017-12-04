@@ -8,7 +8,6 @@ import math
 ranges = [40, 80, 120, 180, 300]
 fft_frame_size = 2000
 
-
 def remove_zeros(vec):
     temp = np.transpose(vec == 0)
     indices = np.argwhere(temp == False)
@@ -59,7 +58,7 @@ def populate_database(mags, database, song_name):
         database[key][song_name].append(i)
 
 #replace with the name of the input file
-original_wav = "furelise.wav"
+original_wav = "../tests/preludetest.wav"
 songs_wav = [song for song in os.listdir("songs") if song[-3:] == "wav"]
 
 with open('song_data.pickle', 'rb') as handle:
@@ -77,14 +76,25 @@ original_fft = get_fft_chunks(original)
 mags = get_magnitudes(original_fft)
 populate_database(mags, original_fingerprint, original_wav)
 
+# print(database)
+# print("original")
+# print(original_fingerprint)
+
 #initialize dictionary (song->similarity)
-similarities = {key[:-4]:0 for key in songs_wav}
+similarities = dict()
+# {key[:-4]:0 for key in songs_wav}
 #for each set of 5 notes in the original/input song, check if in other songs
 for key in original_fingerprint.keys():
     if key in database:
         for song_name in database[key]:
-            similarities[song_name] += len(database[key][song_name]) * len(original_fingerprint[key])
+            if song_name not in similarities:
+                similarities[song_name] = 0
+            db = database[key][song_name]
+            og = original_fingerprint[key][original_wav]
+            similarities[song_name] += len(db) * len(og)
+
 print(similarities)
+
 def knn(k, sim_dict):
     sorted_dict = sorted(sim_dict, key=sim_dict.get, reverse=True)[:k]
     counts = {}
@@ -96,4 +106,5 @@ def knn(k, sim_dict):
     return max(counts, key=counts.get)
 
 out = knn(3, similarities)
-print(out)
+print("input: ", original_wav)
+print("predicted: ", out)

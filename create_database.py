@@ -62,8 +62,7 @@ def populate_database(mags, database, song_name):
 songs_wav = [song for song in os.listdir("songs") if song[-3:] == "wav"]
 sample_rate = librosa.load("songs/" + songs_wav[0])[1]
 song_data = [librosa.load("songs/" + song)[0] for song in songs_wav]
-
-songs = [remove_zeros(s) for s in song_data] #remove the non-information
+songs = [remove_zeros(s) for s in song_data] #remove the non-information and make all the same tempo
 
 freq = np.fft.fftfreq(fft_frame_size)
 fft_freqs = [abs(freq[i]*sample_rate) for i in range(fft_frame_size)] #frequencies at indices of the dft
